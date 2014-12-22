@@ -1,6 +1,6 @@
-from pyotp.otp import OTP
-from pyotp import utils
-
+from .otp import OTP
+from . import utils
+import hmac  # For compare_digest
 
 class HOTP(OTP):
     def at(self, count):
@@ -17,7 +17,7 @@ class HOTP(OTP):
         @param [String/Integer] otp the OTP to check against
         @param [Integer] counter the counter of the OTP
         """
-        return utils.str(otp) == utils.str(self.at(counter))
+        return utils.safe_compare_strint_int(otp, self.at(counter))
 
     def provisioning_uri(self, name, initial_count=0, issuer_name=None):
         """

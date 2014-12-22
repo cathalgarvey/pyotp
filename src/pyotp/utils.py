@@ -1,15 +1,8 @@
 import sys
-
-if sys.version_info < (3,):
-    from urllib import quote
-    str = unicode
-    ord = ord
-    byte_encode = lambda b:b
-else:
-    from urllib.parse import quote
-    str = str
-    ord = lambda i:i  # This is used on a byte-string which in Py3, when indexed, is int.
-    byte_encode = lambda s:s.encode('latin')
+import urllib
+import base64
+import os
+import math
 
 def build_uri(secret, name, initial_count=None, issuer_name=None):
     """
@@ -32,25 +25,57 @@ def build_uri(secret, name, initial_count=None, issuer_name=None):
     @return [String] provisioning uri
     """
     # initial_count may be 0 as a valid param
-    is_initial_count_present = (initial_count != None)
-
-    otp_type = 'hotp' if is_initial_count_present else 'totp'
-    base = 'otpauth://%s/' % otp_type
+    base = 'otpauth://'
+    base += 'hotp/' if initial_count is not None else 'totp/'
 
     if issuer_name:
-        issuer_name = quote(issuer_name)
-        base += '%s:' % issuer_name
+        base += urllib.parse.quote(issuer_name) + ":"
+    base += urllib.parse.quote(name, safe='@')
 
-    uri = '%(base)s%(name)s?secret=%(secret)s' % {
-        'name': quote(name, safe='@'),
+    params = {
         'secret': secret,
-        'base': base,
     }
+    if initial_count is not None:
+        params['counter'] = initial_count
+    if issuer_name is not None:
+        params['issuer'] = issuer_name
+    
+    return base + "?" + urllib.parse.urlencode(params, safe='@')
 
-    if is_initial_count_present:
-        uri += '&counter=%s' % initial_count
 
-    if issuer_name:
-        uri += '&issuer=%s' % issuer_name
+def safe_compare_strint_int(str_or_number: (str, int), number: int)->bool:
+    """
+    Offers as safe a way to compare *either* a string-of-int value or int
+    with an integer value. That is, either comparing "12"==12 or 12==12,
+    as securely as possible versus timing attacks either way.
 
-    return uri
+    Either way, the secret value is "number" and is presumed to be shipped
+    here by trusted code, whereas str_or_number is user-provided and may be
+    crafted to attempt to reveal information about number. The fewer queries
+    that interact with the *value* of number, the better.
+    
+    For this reason, code that might otherwise conveniently cast str/float
+    to int for number is avoided. For the same reason, casting number to
+    bytes/string for comparison is avoided, in favour of converting
+    str_or_number to int instead.
+
+    Raises:
+        RuntimeError when a bug sends "number" a non-int value
+        TypeError when str_or_number is outside (int, str)
+        ValueError when str_or_number is str and not castable to int
+    """
+    if not isinstance(number, int):
+        raise RuntimeError("Argument 'number' provided to safe_compare_strint_int is not an int, was instead type '{}'".format(type(number)))
+    if isinstance(str_or_number, str):
+        query_value = int(str_or_number[:309])  # Limit size of number created by user (to len(str(2**1024)))
+    elif isinstance(str_or_number, int):
+        query_value = str_or_number
+    else:
+        raise TypeError("Argument str_or_number must be string or integer, was: {}".format(str_or_number))
+    return (query_value ^ number) == 0
+
+
+def random_base32(length:int=16, chars=base64._b32alphabet)->str:
+    byte_length = math.ceil(length / 1.6)
+    randval = os.urandom(byte_length)
+    return base64.b32encode(randval)[:length].decode()

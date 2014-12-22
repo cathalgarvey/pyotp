@@ -1,7 +1,8 @@
-from pyotp.otp import OTP
-from pyotp import utils
+from .otp import OTP
+from . import utils
 import datetime
 import time
+import hmac
 
 
 class TOTP(OTP):
@@ -37,8 +38,8 @@ class TOTP(OTP):
         """
         if for_time is None:
             for_time = datetime.datetime.now()
-
-        return utils.str(otp) == utils.str(self.at(for_time))
+        # Do these need to be converting to strings? Does that not involve a timeable operation?
+        return utils.safe_compare_strint_int(otp, self.at(for_time))
 
     def provisioning_uri(self, name, issuer_name=None):
         """
