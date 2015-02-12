@@ -1,4 +1,4 @@
-import .utils as utils
+from . import utils
 
 import base64
 import hashlib
@@ -54,5 +54,5 @@ class OTP(object):
         return '{{0:0{0:d}d}}'.format(self.digits).format(self.generate_otp(*args, **kwargs))
     
     def byte_secret(self):
-        return base64.b32decode(self.secret, casefold=True)
+        return base64.b32decode(self.secret.decode(), casefold=True)
 

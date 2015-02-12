@@ -7,7 +7,7 @@ import math
 from .otp import OTP
 from .hotp import HOTP
 from .totp import TOTP
-import .utils as utils
+from . import utils
 
 from .utils import random_base32
 
