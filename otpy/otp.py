@@ -6,7 +6,7 @@ import hmac
 
 
 class OTP(object):
-    def __init__(self, s: str, digits:int=6, digest:"(bytes)->bytes"=hashlib.sha1):
+    def __init__(self, s: str, *, digits:int=6, digest:"(bytes)->bytes"=hashlib.sha1):
         """
         @param [String] secret in the form of base32
         @option options digits [Integer] (6)
@@ -54,5 +54,12 @@ class OTP(object):
         return '{{0:0{0:d}d}}'.format(self.digits).format(self.generate_otp(*args, **kwargs))
     
     def byte_secret(self):
-        return base64.b32decode(self.secret.decode(), casefold=True)
+        # In Py3.3+ base64.b64**code take string/bytes but in prior it's
+        # always bytes.
+        if isinstance(self.secret, str):
+            return base64.b32decode(self.secret.encode(), casefold=True)
+        elif isinstance(self.secret, bytes):
+            return base64.b32decode(self.secret, casefold=True)
+        else:
+            raise TypeError("Self.secret is neither bytes nor string..")
 

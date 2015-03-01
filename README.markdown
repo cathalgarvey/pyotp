@@ -13,7 +13,7 @@ and iPhone, and should work similarly to GMail, World of Warcraft, and
 other OTP based authenticators.
 
 Support is not given for any purpose, but actual identifiable and
-characterised bug-reports *based on the codebase* are gratefully accepted.
+characterised bug-reports are gratefully accepted.
 
 ## Quick overview of using One Time Passwords on your phone
 
@@ -24,13 +24,13 @@ characterised bug-reports *based on the codebase* are gratefully accepted.
 
 ## Installation
 
-    pip install pyotp
+    pip install otpy
 
 ## Use
 
-### Time based OTP's
+### Time based OTPs
 
-    totp = pyotp.TOTP('base32secret3232')
+    totp = otpy.TOTP('base32secret3232')
     totp.now() # => 492039
 
     # OTP verified for current time
@@ -38,9 +38,9 @@ characterised bug-reports *based on the codebase* are gratefully accepted.
     time.sleep(30)
     totp.verify(492039) # => False
 
-### Counter based OTP's
+### Counter based OTPs
 
-    hotp = pyotp.HOTP('base32secret3232')
+    hotp = otpy.HOTP('base32secret3232')
     hotp.at(0) # => 260182
     hotp.at(1) # => 55283
     hotp.at(1401) # => 316439
@@ -51,7 +51,7 @@ characterised bug-reports *based on the codebase* are gratefully accepted.
 
 ### Generating a Base32 Secret key
 
-    pyotp.random_base32() # returns a 16 character base32 secret. Compatible with Google Authenticator
+    otpy.random_base32() # returns a 16 character base32 secret. Compatible with Google Authenticator
 
 ### Google Authenticator Compatible
 
@@ -73,8 +73,8 @@ Scan the following barcode with your phone, using Google Authenticator
 
 Now run the following and compare the output
 
-    import pyotp
-    totp = pyotp.TOTP("JBSWY3DPEHPK3PXP")
+    import otpy
+    totp = otpy.TOTP("JBSWY3DPEHPK3PXP")
     print "Current OTP: %s" % totp.now()
 
 ### Licensing
@@ -94,6 +94,7 @@ to see it. I haven't kept it in newer commits to avoid confusion over what
 the newer revisions to the codebase are licensed under.
 
 ### Changelog
+Just the highlights here, for the rest see git commit history:
 
 - 0.9 - Hard fork from Nathan's code as PRs had gone stale and I wanted
     to drop messy legacy support. Significant code reorganisations and clean-ups.
